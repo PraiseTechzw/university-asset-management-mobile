@@ -43,7 +43,13 @@
       "expo-camera",
       "expo-barcode-scanner",
       "expo-image-picker",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-auth-session",
+        {
+          "scheme": "cut-asset-manager"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

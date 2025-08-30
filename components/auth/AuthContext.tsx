@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
-import { AuthUser, getCurrentUser, signIn, signOut, signUp, resetPassword } from '../../lib/auth';
+import { AuthUser, getCurrentUser, signIn, signOut, signUp, resetPassword, signInWithGoogle } from '../../lib/auth';
 
 interface AuthContextType {
   user: AuthUser | null;
   session: Session | null;
   loading: boolean;
   signIn: (credentials: { email: string; password: string }) => Promise<{ user: AuthUser | null; error: string | null }>;
+  signInWithGoogle: () => Promise<{ user: AuthUser | null; error: string | null }>;
   signUp: (userData: { email: string; password: string; full_name: string; department?: string; phone?: string }) => Promise<{ user: AuthUser | null; error: string | null }>;
   signOut: () => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
@@ -95,11 +96,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return result;
   };
 
+  const handleSignInWithGoogle = async () => {
+    const result = await signInWithGoogle();
+    if (result.user) {
+      setUser(result.user);
+    }
+    return result;
+  };
+
   const value: AuthContextType = {
     user,
     session,
     loading,
     signIn: handleSignIn,
+    signInWithGoogle: handleSignInWithGoogle,
     signUp: handleSignUp,
     signOut: handleSignOut,
     resetPassword,

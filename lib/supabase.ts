@@ -1,10 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from 'react-native-async-storage';
-import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Replace with your actual Supabase URL and anon key
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://asddokodyqoxhuuzkspn.supabase.co';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzZGRva29keXFveGh1dXprc3BuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0ODA2OTQsImV4cCI6MjA3MjA1NjY5NH0.POLS3_MOT-4Hevgt94LZ_ueWftEuByiXc7SwX3uYjjM';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -12,6 +11,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    flowType: 'pkce',
   },
   realtime: {
     params: {

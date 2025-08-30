@@ -20,9 +20,10 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   const handleLogin = async () => {
@@ -48,12 +49,23 @@ export default function LoginScreen() {
     }
   };
 
-  const handleForgotPassword = () => {
-    router.push('/(auth)/forgot-password');
-  };
-
-  const handleRegister = () => {
-    router.push('/(auth)/register');
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      
+      if (result.error) {
+        Alert.alert('Google Sign-In Failed', result.error);
+      } else {
+        // For OAuth, the user will be redirected back to the app
+        // The auth state change will be handled by AuthContext
+        // No need to navigate here as it will be handled automatically
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred during Google sign in');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -110,12 +122,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={styles.forgotPassword}
-            onPress={handleForgotPassword}
-          >
-            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-          </TouchableOpacity>
+
 
           <TouchableOpacity
             style={[styles.loginButton, loading && styles.loginButtonDisabled]}
@@ -136,10 +143,31 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            style={styles.registerButton}
-            onPress={handleRegister}
+            style={[styles.googleButton, googleLoading && styles.googleButtonDisabled]}
+            onPress={handleGoogleSignIn}
+            disabled={googleLoading}
           >
-            <Text style={styles.registerButtonText}>Create new account</Text>
+            <Ionicons name="logo-google" size={20} color="#EA4335" style={styles.googleIcon} />
+            {googleLoading ? (
+              <Text style={styles.googleButtonText}>Signing in...</Text>
+            ) : (
+              <Text style={styles.googleButtonText}>Continue with Google</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleSignIn}
+            disabled={loading}
+          >
+            <Ionicons name="logo-google" size={20} color="#4285F4" style={styles.googleIcon} />
+            <Text style={styles.googleButtonText}>Continue with Google</Text>
           </TouchableOpacity>
         </View>
 
@@ -213,15 +241,7 @@ const styles = StyleSheet.create({
   passwordToggle: {
     padding: 8,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 24,
-  },
-  forgotPasswordText: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
+
   loginButton: {
     backgroundColor: Colors.light.primary,
     borderRadius: 12,
@@ -261,19 +281,38 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
     fontSize: 14,
   },
-  registerButton: {
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.light.surface,
     borderRadius: 12,
     height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    marginBottom: 24,
+    shadowColor: Colors.light.text,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  registerButtonText: {
+  googleButtonDisabled: {
+    opacity: 0.6,
+  },
+  googleIcon: {
+    marginRight: 12,
+  },
+  googleButtonText: {
     color: Colors.light.text,
     fontSize: 16,
     fontWeight: '500',
   },
+
+
   footer: {
     alignItems: 'center',
     marginTop: 'auto',

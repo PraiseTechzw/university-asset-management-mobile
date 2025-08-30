@@ -1,6 +1,8 @@
 import { supabase } from './supabase';
 import { User } from './supabase';
 import * as SecureStore from 'expo-secure-store';
+import * as WebBrowser from 'expo-web-browser';
+import { oauthConfig, validateOAuthResponse } from './oauth';
 
 export interface AuthUser {
   id: string;
@@ -216,4 +218,92 @@ export const isAdmin = async (): Promise<boolean> => {
 export const isTechnician = async (): Promise<boolean> => {
   const role = await getUserRole();
   return role === 'technician' || role === 'admin';
+};
+
+// Sign in with Google
+export const signInWithGoogle = async (): Promise<{ user: AuthUser | null; error: string | null }> => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: oauthConfig.google.redirectUri,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+
+    if (error) {
+      return { user: null, error: error.message };
+    }
+
+    if (!data.url) {
+      return { user: null, error: 'Failed to get OAuth URL' };
+    }
+
+    // Open the OAuth URL in a web browser
+    const result = await WebBrowser.openAuthSessionAsync(data.url, oauthConfig.google.redirectUri);
+
+    if (result.type === 'success' && result.url) {
+      // Validate the OAuth response
+      const { error: oauthError, accessToken, refreshToken } = validateOAuthResponse(result.url);
+      
+      if (oauthError) {
+        return { user: null, error: oauthError };
+      }
+
+      if (accessToken) {
+        // Set the session manually
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        });
+
+        if (sessionError) {
+          return { user: null, error: sessionError.message };
+        }
+
+        if (sessionData.session?.user) {
+          // Get user profile
+          const { data: profile, error: profileError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', sessionData.session.user.id)
+            .single();
+
+          if (profileError || !profile) {
+            // Create user profile if it doesn't exist
+            const { data: newProfile, error: createError } = await supabase
+              .from('users')
+              .insert({
+                id: sessionData.session.user.id,
+                email: sessionData.session.user.email || '',
+                full_name: sessionData.session.user.user_metadata?.full_name || 'Google User',
+                role: 'staff', // Default role for Google users
+                department: null,
+                phone: null,
+              })
+              .select()
+              .single();
+
+            if (createError || !newProfile) {
+              return { user: null, error: 'Failed to create user profile' };
+            }
+
+            return { user: newProfile, error: null };
+          }
+
+          return { user: profile, error: null };
+        }
+      }
+    } else if (result.type === 'cancel') {
+      return { user: null, error: 'Google authentication was cancelled' };
+    }
+
+    return { user: null, error: 'Google authentication failed' };
+  } catch (error) {
+    console.error('Google sign in error:', error);
+    return { user: null, error: 'An unexpected error occurred during Google authentication' };
+  }
 };
