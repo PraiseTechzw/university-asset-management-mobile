@@ -12,30 +12,30 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../components/auth/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { Asset, AssetRequest } from '../../lib/supabase';
+import { Asset, AssetIssue } from '../../lib/supabase';
 import Colors from '../../constants/Colors';
 import { statusColors, priorityColors } from '../../constants/Colors';
 
 interface DashboardStats {
   totalAssets: number;
   availableAssets: number;
-  assignedAssets: number;
+  issuedAssets: number;
   maintenanceAssets: number;
-  pendingRequests: number;
-  myRequests: number;
+  activeIssues: number;
+  myIssues: number;
 }
 
 export default function DashboardScreen() {
   const [stats, setStats] = useState<DashboardStats>({
     totalAssets: 0,
     availableAssets: 0,
-    assignedAssets: 0,
+    issuedAssets: 0,
     maintenanceAssets: 0,
-    pendingRequests: 0,
-    myRequests: 0,
+    activeIssues: 0,
+    myIssues: 0,
   });
   const [recentAssets, setRecentAssets] = useState<Asset[]>([]);
-  const [recentRequests, setRecentRequests] = useState<AssetRequest[]>([]);
+  const [recentIssues, setRecentIssues] = useState<AssetIssue[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -53,28 +53,28 @@ export default function DashboardScreen() {
 
       if (assetsError) throw assetsError;
 
-      // Load request statistics
-      const { data: requests, error: requestsError } = await supabase
-        .from('asset_requests')
+      // Load asset issue statistics
+      const { data: issues, error: issuesError } = await supabase
+        .from('asset_issues')
         .select('*');
 
-      if (requestsError) throw requestsError;
+      if (issuesError) throw issuesError;
 
       // Calculate statistics
       const totalAssets = assets?.length || 0;
       const availableAssets = assets?.filter(a => a.status === 'available').length || 0;
-      const assignedAssets = assets?.filter(a => a.status === 'assigned').length || 0;
+      const issuedAssets = assets?.filter(a => a.status === 'issued').length || 0;
       const maintenanceAssets = assets?.filter(a => a.status === 'maintenance').length || 0;
-      const pendingRequests = requests?.filter(r => r.status === 'pending').length || 0;
-      const myRequests = requests?.filter(r => r.user_id === user?.id).length || 0;
+      const activeIssues = issues?.filter(i => i.status === 'active').length || 0;
+      const myIssues = issues?.filter(i => i.issued_to === user?.id).length || 0;
 
       setStats({
         totalAssets,
         availableAssets,
-        assignedAssets,
+        issuedAssets,
         maintenanceAssets,
-        pendingRequests,
-        myRequests,
+        activeIssues,
+        myIssues,
       });
 
       // Load recent assets
@@ -86,14 +86,14 @@ export default function DashboardScreen() {
 
       setRecentAssets(recentAssetsData || []);
 
-      // Load recent requests
-      const { data: recentRequestsData } = await supabase
-        .from('asset_requests')
+      // Load recent asset issues
+      const { data: recentIssuesData } = await supabase
+        .from('asset_issues')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
 
-      setRecentRequests(recentRequestsData || []);
+      setRecentIssues(recentIssuesData || []);
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);

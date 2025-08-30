@@ -20,105 +20,117 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-// Database types for TypeScript
+// Database types for TypeScript - Updated to match actual database schema
 export interface Database {
   public: {
     Tables: {
       assets: {
         Row: {
           id: string;
+          asset_code: string;
           name: string;
-          description: string | null;
+          category: 'projector' | 'laptop' | 'desktop' | 'printer' | 'camera' | 'other';
+          brand: string | null;
+          model: string | null;
           serial_number: string | null;
-          asset_tag: string | null;
-          category: string | null;
-          location: string | null;
-          status: 'available' | 'assigned' | 'maintenance' | 'retired';
-          assigned_to: string | null;
-          assigned_date: string | null;
           purchase_date: string | null;
+          purchase_price: number | null;
           warranty_expiry: string | null;
+          condition: 'excellent' | 'good' | 'fair' | 'poor' | 'damaged';
+          status: 'available' | 'issued' | 'maintenance' | 'retired';
+          location: string | null;
+          description: string | null;
+          qr_code_url: string | null;
+          created_by: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
+          asset_code: string;
           name: string;
-          description?: string | null;
+          category: 'projector' | 'laptop' | 'desktop' | 'printer' | 'camera' | 'other';
+          brand?: string | null;
+          model?: string | null;
           serial_number?: string | null;
-          asset_tag?: string | null;
-          category?: string | null;
-          location?: string | null;
-          status?: 'available' | 'assigned' | 'maintenance' | 'retired';
-          assigned_to?: string | null;
-          assigned_date?: string | null;
           purchase_date?: string | null;
+          purchase_price?: number | null;
           warranty_expiry?: string | null;
+          condition: 'excellent' | 'good' | 'fair' | 'poor' | 'damaged';
+          status?: 'available' | 'issued' | 'maintenance' | 'retired';
+          location?: string | null;
+          description?: string | null;
+          qr_code_url?: string | null;
+          created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
+          asset_code?: string;
           name?: string;
-          description?: string | null;
+          category?: 'projector' | 'laptop' | 'desktop' | 'printer' | 'camera' | 'other';
+          brand?: string | null;
+          model?: string | null;
           serial_number?: string | null;
-          asset_tag?: string | null;
-          category?: string | null;
-          location?: string | null;
-          status?: 'available' | 'assigned' | 'maintenance' | 'retired';
-          assigned_to?: string | null;
-          assigned_date?: string | null;
           purchase_date?: string | null;
+          purchase_price?: number | null;
           warranty_expiry?: string | null;
+          condition?: 'excellent' | 'good' | 'fair' | 'poor' | 'damaged';
+          status?: 'available' | 'issued' | 'maintenance' | 'retired';
+          location?: string | null;
+          description?: string | null;
+          qr_code_url?: string | null;
+          created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
       };
-      asset_requests: {
+      asset_issues: {
         Row: {
           id: string;
-          user_id: string;
-          asset_id: string | null;
-          request_type: 'borrow' | 'maintenance' | 'return';
-          description: string;
-          priority: 'low' | 'medium' | 'high' | 'urgent';
-          status: 'pending' | 'approved' | 'rejected' | 'completed';
-          requested_date: string;
-          approved_date: string | null;
-          completed_date: string | null;
+          asset_id: string;
+          issued_to: string;
+          issued_by: string;
+          issue_date: string;
+          expected_return_date: string | null;
+          actual_return_date: string | null;
+          return_condition: 'excellent' | 'good' | 'fair' | 'poor' | 'damaged' | null;
+          notes: string | null;
+          status: 'active' | 'returned' | 'overdue';
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
-          user_id: string;
-          asset_id?: string | null;
-          request_type: 'borrow' | 'maintenance' | 'return';
-          description: string;
-          priority?: 'low' | 'medium' | 'high' | 'urgent';
-          status?: 'pending' | 'approved' | 'rejected' | 'completed';
-          requested_date?: string;
-          approved_date?: string | null;
-          completed_date?: string | null;
+          asset_id: string;
+          issued_to: string;
+          issued_by: string;
+          issue_date?: string;
+          expected_return_date?: string | null;
+          actual_return_date?: string | null;
+          return_condition?: 'excellent' | 'good' | 'fair' | 'poor' | 'damaged' | null;
+          notes?: string | null;
+          status?: 'active' | 'returned' | 'overdue';
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
-          user_id?: string;
-          asset_id?: string | null;
-          request_type?: 'borrow' | 'maintenance' | 'return';
-          description?: string;
-          priority?: 'low' | 'medium' | 'high' | 'urgent';
-          status?: 'pending' | 'approved' | 'rejected' | 'completed';
-          requested_date?: string;
-          approved_date?: string | null;
-          completed_date?: string | null;
+          asset_id?: string;
+          issued_to?: string;
+          issued_by?: string;
+          issue_date?: string;
+          expected_return_date?: string | null;
+          actual_return_date?: string | null;
+          return_condition?: 'excellent' | 'good' | 'fair' | 'poor' | 'damaged' | null;
+          notes?: string | null;
+          status?: string;
           created_at?: string;
           updated_at?: string;
         };
       };
-      users: {
+      profiles: {
         Row: {
           id: string;
           email: string;
@@ -150,10 +162,46 @@ export interface Database {
           updated_at?: string;
         };
       };
+      maintenance_logs: {
+        Row: {
+          id: string;
+          asset_id: string;
+          maintenance_type: 'repair' | 'service' | 'inspection' | 'upgrade';
+          description: string;
+          cost: number | null;
+          performed_by: string | null;
+          maintenance_date: string;
+          next_maintenance_date: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          asset_id: string;
+          maintenance_type: 'repair' | 'service' | 'inspection' | 'upgrade';
+          description: string;
+          cost?: number | null;
+          performed_by?: string | null;
+          maintenance_date?: string;
+          next_maintenance_date?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          asset_id?: string;
+          maintenance_type?: 'repair' | 'service' | 'inspection' | 'upgrade';
+          description?: string;
+          cost?: number | null;
+          performed_by?: string | null;
+          maintenance_date?: string;
+          next_maintenance_date?: string | null;
+          created_at?: string;
+        };
+      };
     };
   };
 }
 
 export type Asset = Database['public']['Tables']['assets']['Row'];
-export type AssetRequest = Database['public']['Tables']['asset_requests']['Row'];
-export type User = Database['public']['Tables']['users']['Row'];
+export type AssetIssue = Database['public']['Tables']['asset_issues']['Row'];
+export type Profile = Database['public']['Tables']['profiles']['Row'];
+export type MaintenanceLog = Database['public']['Tables']['maintenance_logs']['Row'];

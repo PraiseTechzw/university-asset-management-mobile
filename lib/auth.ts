@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { User } from './supabase';
+import { Profile } from './supabase';
 import * as SecureStore from 'expo-secure-store';
 import * as WebBrowser from 'expo-web-browser';
 import { oauthConfig, validateOAuthResponse } from './oauth';
@@ -35,9 +35,9 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       return null;
     }
 
-    // Get user profile from users table
+    // Get user profile from profiles table
     const { data: profile, error: profileError } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
@@ -71,7 +71,7 @@ export const signIn = async (credentials: LoginCredentials): Promise<{ user: Aut
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('id', data.user.id)
       .single();
@@ -106,7 +106,7 @@ export const signUp = async (userData: RegisterData): Promise<{ user: AuthUser |
 
     // Create user profile
     const { data: profile, error: profileError } = await supabase
-      .from('users')
+      .from('profiles')
       .insert({
         id: data.user.id,
         email: userData.email,
@@ -265,27 +265,27 @@ export const signInWithGoogle = async (): Promise<{ user: AuthUser | null; error
         }
 
         if (sessionData.session?.user) {
-          // Get user profile
-          const { data: profile, error: profileError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', sessionData.session.user.id)
-            .single();
+                     // Get user profile
+           const { data: profile, error: profileError } = await supabase
+             .from('profiles')
+             .select('*')
+             .eq('id', sessionData.session.user.id)
+             .single();
 
           if (profileError || !profile) {
-            // Create user profile if it doesn't exist
-            const { data: newProfile, error: createError } = await supabase
-              .from('users')
-              .insert({
-                id: sessionData.session.user.id,
-                email: sessionData.session.user.email || '',
-                full_name: sessionData.session.user.user_metadata?.full_name || 'Google User',
-                role: 'staff', // Default role for Google users
-                department: null,
-                phone: null,
-              })
-              .select()
-              .single();
+                         // Create user profile if it doesn't exist
+             const { data: newProfile, error: createError } = await supabase
+               .from('profiles')
+               .insert({
+                 id: sessionData.session.user.id,
+                 email: sessionData.session.user.email || '',
+                 full_name: sessionData.session.user.user_metadata?.full_name || 'Google User',
+                 role: 'staff', // Default role for Google users
+                 department: null,
+                 phone: null,
+               })
+               .select()
+               .single();
 
             if (createError || !newProfile) {
               return { user: null, error: 'Failed to create user profile' };
